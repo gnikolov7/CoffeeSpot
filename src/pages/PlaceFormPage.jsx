@@ -1,9 +1,11 @@
 import {
+    useEffect,
     useState,
 } from 'react';
 
 import {
     useNavigate,
+    useParams,
 } from 'react-router-dom';
 
 import PageHeading
@@ -15,6 +17,8 @@ import {
 
 import {
     createPlace,
+    getPlaceById,
+    updatePlace,
 } from '../services/placeService.js';
 
 
@@ -35,8 +39,15 @@ export default function PlaceFormPage({
         useNavigate();
 
     const {
+        placeId,
+    } = useParams();
+
+    const {
         user,
     } = useAuth();
+
+    const isEdit =
+        mode === 'edit';
 
     const [
         formValues,
@@ -46,18 +57,102 @@ export default function PlaceFormPage({
     );
 
     const [
-        error,
-        setError,
-    ] = useState('');
+        isLoading,
+        setIsLoading,
+    ] = useState(
+        isEdit
+    );
 
     const [
         isSubmitting,
         setIsSubmitting,
     ] = useState(false);
 
+    const [
+        error,
+        setError,
+    ] = useState('');
 
-    const isEdit =
-        mode === 'edit';
+
+    useEffect(() => {
+        if (!isEdit) {
+            return;
+        }
+
+        let isActive = true;
+
+
+        async function loadPlace() {
+            try {
+                const place =
+                    await getPlaceById(
+                        placeId
+                    );
+
+                if (
+                    place.owner_id !==
+                    user.id
+                ) {
+                    navigate(
+                        `/places/${placeId}`
+                    );
+
+                    return;
+                }
+
+                if (!isActive) {
+                    return;
+                }
+
+                setFormValues({
+                    name:
+                        place.name,
+
+                    description:
+                        place.description,
+
+                    category:
+                        place.category,
+
+                    city:
+                        place.city,
+
+                    address:
+                        place.address ?? '',
+
+                    imageUrl:
+                        place.image_url ?? '',
+                });
+            } catch (loadError) {
+                console.error(
+                    loadError
+                );
+
+                if (isActive) {
+                    setError(
+                        'Could not load place.'
+                    );
+                }
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
+            }
+        }
+
+
+        loadPlace();
+
+
+        return () => {
+            isActive = false;
+        };
+    }, [
+        isEdit,
+        navigate,
+        placeId,
+        user.id,
+    ]);
 
 
     function handleChange(event) {
@@ -99,6 +194,35 @@ export default function PlaceFormPage({
     }
 
 
+    function buildPlaceData() {
+        return {
+            name:
+                formValues.name.trim(),
+
+            description:
+                formValues
+                    .description
+                    .trim(),
+
+            category:
+                formValues.category,
+
+            city:
+                formValues.city.trim(),
+
+            address:
+                formValues
+                    .address
+                    .trim(),
+
+            image_url:
+                formValues
+                    .imageUrl
+                    .trim(),
+        };
+    }
+
+
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -118,39 +242,30 @@ export default function PlaceFormPage({
         setIsSubmitting(true);
 
         try {
-            const placeData = {
-                owner_id:
-                    user.id,
+            const placeData =
+                buildPlaceData();
 
-                name:
-                    formValues.name.trim(),
-
-                description:
-                    formValues
-                        .description
-                        .trim(),
-
-                category:
-                    formValues.category,
-
-                city:
-                    formValues.city.trim(),
-
-                address:
-                    formValues
-                        .address
-                        .trim(),
-
-                image_url:
-                    formValues
-                        .imageUrl
-                        .trim(),
-            };
-
-            const createdPlace =
-                await createPlace(
+            if (isEdit) {
+                await updatePlace(
+                    placeId,
                     placeData
                 );
+
+                navigate(
+                    `/places/${placeId}`
+                );
+
+                return;
+            }
+
+
+            const createdPlace =
+                await createPlace({
+                    ...placeData,
+
+                    owner_id:
+                        user.id,
+                });
 
             navigate(
                 `/places/${createdPlace.id}`
@@ -162,7 +277,7 @@ export default function PlaceFormPage({
 
             setError(
                 submitError.message
-                || 'Could not create place.'
+                || 'Could not save place.'
             );
         } finally {
             setIsSubmitting(false);
@@ -170,23 +285,15 @@ export default function PlaceFormPage({
     }
 
 
-    if (isEdit) {
+    if (isLoading) {
         return (
             <div
                 className="
                     container
                     inner-page
-                    narrow-page
                 "
             >
-                <PageHeading
-                    eyebrow="EDIT PLACE"
-                    title="Edit is coming next."
-                    description={
-                        'First we are finishing '
-                        + 'the create flow.'
-                    }
-                />
+                Loading place...
             </div>
         );
     }
@@ -201,13 +308,26 @@ export default function PlaceFormPage({
             "
         >
             <PageHeading
-                eyebrow="SHARE A GOOD PLACE"
-                title="Add a new place."
+                eyebrow={
+                    isEdit
+                        ? 'EDIT PLACE'
+                        : 'SHARE A GOOD PLACE'
+                }
+                title={
+                    isEdit
+                        ? 'Update your place.'
+                        : 'Add a new place.'
+                }
                 description={
-                    'Help people discover '
-                    + 'somewhere worth visiting.'
+                    isEdit
+                        ? 'Keep the information accurate and useful.'
+                        : (
+                            'Help people discover '
+                            + 'somewhere worth visiting.'
+                        )
                 }
             />
+
 
             <form
                 className="place-form"
@@ -301,10 +421,6 @@ export default function PlaceFormPage({
                         onChange={
                             handleChange
                         }
-                        placeholder={
-                            'Example: '
-                            + '15 Hristo Belchev St.'
-                        }
                     />
                 </div>
 
@@ -337,16 +453,12 @@ export default function PlaceFormPage({
                     <textarea
                         id="description"
                         name="description"
+                        rows="6"
                         value={
                             formValues.description
                         }
                         onChange={
                             handleChange
-                        }
-                        rows="6"
-                        placeholder={
-                            'What makes '
-                            + 'this place special?'
                         }
                     />
                 </div>
@@ -371,7 +483,9 @@ export default function PlaceFormPage({
                 >
                     {isSubmitting
                         ? 'Saving...'
-                        : 'Add place'}
+                        : isEdit
+                            ? 'Save changes'
+                            : 'Add place'}
                 </button>
             </form>
         </div>

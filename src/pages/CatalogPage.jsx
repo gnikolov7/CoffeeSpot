@@ -1,24 +1,141 @@
-import PageHeading from '../components/PageHeading.jsx';
-import DevelopmentNotice from '../components/DevelopmentNotice.jsx';
+import {
+    useEffect,
+    useState,
+} from 'react';
+
+import PageHeading
+    from '../components/PageHeading.jsx';
+
+import PlaceCard
+    from '../components/PlaceCard.jsx';
+
+import {
+    getAllPlaces,
+} from '../services/placeService.js';
+
 
 export default function CatalogPage() {
-  return (
-    <div className="container inner-page">
-      <PageHeading eyebrow="THE CITY IS YOUR MENU" 
-      title="Explore places." 
-      description="Restaurants, coffee shops, bakeries and bars worth discovering." />
+    const [
+        places,
+        setPlaces,
+    ] = useState([]);
 
-      <div className="filters-demo" aria-label="Planned catalog filters">
-        <span className="filter-chip is-selected">All places</span>
-        <span className="filter-chip">Restaurants</span>
-        <span className="filter-chip">Coffee shops</span>
-        <span className="filter-chip">Bakeries</span>
-        <span className="filter-chip">Bars</span>
-      </div>
-      
-      <DevelopmentNotice title="The catalog will connect to Supabase on Day 3.">
-        No restaurant records are hardcoded into this starter. The production version will load real, persistent records and handle loading, empty and error states.
-      </DevelopmentNotice>
-    </div>
-  );
+    const [
+        isLoading,
+        setIsLoading,
+    ] = useState(true);
+
+    const [
+        error,
+        setError,
+    ] = useState('');
+
+
+    useEffect(() => {
+        let isActive = true;
+
+
+        async function loadPlaces() {
+            try {
+                const loadedPlaces =
+                    await getAllPlaces();
+
+                if (isActive) {
+                    setPlaces(
+                        loadedPlaces
+                    );
+                }
+            } catch (loadError) {
+                console.error(
+                    loadError
+                );
+
+                if (isActive) {
+                    setError(
+                        'Could not load places.'
+                    );
+                }
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
+            }
+        }
+
+
+        loadPlaces();
+
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
+
+
+    if (isLoading) {
+        return (
+            <div
+                className="
+                    container
+                    inner-page
+                "
+            >
+                Loading places...
+            </div>
+        );
+    }
+
+
+    return (
+        <div
+            className="
+                container
+                inner-page
+            "
+        >
+            <PageHeading
+                eyebrow="EXPLORE"
+                title="Find your next spot."
+                description={
+                    'Restaurants, cafés, '
+                    + 'bakeries and bars '
+                    + 'worth discovering.'
+                }
+            />
+
+
+            {error && (
+                <p className="form-error">
+                    {error}
+                </p>
+            )}
+
+
+            {!error &&
+                places.length === 0 && (
+                    <div className="empty-state">
+                        <h2>
+                            No places yet.
+                        </h2>
+
+                        <p>
+                            Be the first person
+                            to add one.
+                        </p>
+                    </div>
+                )}
+
+
+            <div className="places-grid">
+                {places.map(
+                    place => (
+                        <PlaceCard
+                            key={place.id}
+                            place={place}
+                        />
+                    )
+                )}
+            </div>
+        </div>
+    );
 }
