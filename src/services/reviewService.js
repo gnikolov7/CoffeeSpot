@@ -11,7 +11,17 @@ export async function getReviewsByPlace(
         error,
     } = await supabase
         .from('reviews')
-        .select('*')
+        .select(`
+            id,
+            place_id,
+            user_id,
+            rating,
+            comment,
+            created_at,
+            profiles (
+                username
+            )
+        `)
         .eq(
             'place_id',
             placeId
@@ -40,7 +50,17 @@ export async function createReview(
     } = await supabase
         .from('reviews')
         .insert(reviewData)
-        .select()
+        .select(`
+            id,
+            place_id,
+            user_id,
+            rating,
+            comment,
+            created_at,
+            profiles (
+                username
+            )
+        `)
         .single();
 
     if (error) {
@@ -49,3 +69,4 @@ export async function createReview(
 
     return data;
 }
+

@@ -29,20 +29,35 @@ export default function ReviewList({
                         key={review.id}
                         className="review-card"
                     >
+                        <div className="review-author">
+                            <strong>
+                                {
+                                    review.profiles?.username
+                                    ?? 'CoffeeSpot user'
+                                }
+                            </strong>
+                        </div>
+
+
                         <RatingStars
                             rating={
                                 review.rating
                             }
                         />
 
+
                         <p>
                             {review.comment}
                         </p>
 
+
                         <span className="review-date">
-                            {new Date(
-                                review.created_at
-                            ).toLocaleDateString()}
+                            {
+                                new Date(
+                                    review.created_at
+                                )
+                                    .toLocaleDateString()
+                            }
                         </span>
                     </article>
                 )

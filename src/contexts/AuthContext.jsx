@@ -46,14 +46,21 @@ export function AuthProvider({ children }) {
     }
 
     async function register(
+    email,
+    password,
+    username
+) {
+    return await supabase.auth.signUp({
         email,
-        password
-    ) {
-        return await supabase.auth.signUp({
-            email,
-            password,
-        });
-    }
+        password,
+
+        options: {
+            data: {
+                username,
+            },
+        },
+    });
+}
 
     async function login(
         email,
