@@ -1934,4 +1934,91 @@ p {
     font-size: 14px;
 }
 
+.catalog-tools {
+    margin-bottom: 35px;
+}
+
+
+.search-box {
+    position: relative;
+
+    max-width: 620px;
+
+    margin-bottom: 20px;
+}
+
+
+.search-box input {
+    width: 100%;
+
+    padding:
+        16px
+        18px
+        16px
+        48px;
+
+    border:
+        1px solid #d4d7cd;
+
+    border-radius: 8px;
+
+    background: #fffdf5;
+
+    color: #202c23;
+
+    font: inherit;
+}
+
+
+.search-box input:focus {
+    outline:
+        2px solid #204737;
+
+    outline-offset: 2px;
+}
+
+
+.search-icon {
+    position: absolute;
+
+    left: 17px;
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    font-size: 23px;
+
+    color: #647466;
+
+    pointer-events: none;
+}
+
+
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-bottom: 16px;
+}
+
+
+.category-filters .filter-chip {
+    font: inherit;
+
+    cursor: pointer;
+}
+
+
+.results-count {
+    margin: 0;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #7a867b;
+}
+
 
