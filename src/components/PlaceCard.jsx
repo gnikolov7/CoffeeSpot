@@ -2,10 +2,22 @@ import {
     Link,
 } from 'react-router-dom';
 
+import RatingStars
+    from './RatingStars.jsx';
+
 
 export default function PlaceCard({
     place,
 }) {
+    const reviews =
+        place.reviews ?? [];
+
+    const averageRating =
+        calculateAverageRating(
+            reviews
+        );
+
+
     return (
         <Link
             to={`/places/${place.id}`}
@@ -46,6 +58,36 @@ export default function PlaceCard({
                 </h2>
 
 
+                <div className="place-card-rating">
+                    {reviews.length > 0 ? (
+                        <>
+                            <RatingStars
+                                rating={
+                                    averageRating
+                                }
+                            />
+
+                            <strong>
+                                {
+                                    averageRating
+                                        .toFixed(1)
+                                }
+                            </strong>
+
+                            <span>
+                                (
+                                {reviews.length}
+                                )
+                            </span>
+                        </>
+                    ) : (
+                        <span>
+                            No reviews yet
+                        </span>
+                    )}
+                </div>
+
+
                 <p>
                     {place.description}
                 </p>
@@ -60,3 +102,29 @@ export default function PlaceCard({
         </Link>
     );
 }
+
+
+function calculateAverageRating(
+    reviews
+) {
+    if (reviews.length === 0) {
+        return 0;
+    }
+
+    const totalRating =
+        reviews.reduce(
+            (
+                total,
+                review
+            ) =>
+                total
+                + review.rating,
+            0
+        );
+
+    return (
+        totalRating
+        / reviews.length
+    );
+}
+

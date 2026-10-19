@@ -29,7 +29,12 @@ export async function getAllPlaces() {
         error,
     } = await supabase
         .from('places')
-        .select('*')
+        .select(`
+            *,
+            reviews (
+                rating
+            )
+        `)
         .order(
             'created_at',
             {
@@ -65,6 +70,39 @@ export async function getPlaceById(
     }
 
     return data;
+}
+
+
+export async function getPlacesByOwner(
+    ownerId
+) {
+    const {
+        data,
+        error,
+    } = await supabase
+        .from('places')
+        .select(`
+            *,
+            reviews (
+                rating
+            )
+        `)
+        .eq(
+            'owner_id',
+            ownerId
+        )
+        .order(
+            'created_at',
+            {
+                ascending: false,
+            }
+        );
+
+    if (error) {
+        throw error;
+    }
+
+    return data ?? [];
 }
 
 
@@ -109,30 +147,4 @@ export async function deletePlace(
     if (error) {
         throw error;
     }
-}
-export async function getPlacesByOwner(
-    ownerId
-) {
-    const {
-        data,
-        error,
-    } = await supabase
-        .from('places')
-        .select('*')
-        .eq(
-            'owner_id',
-            ownerId
-        )
-        .order(
-            'created_at',
-            {
-                ascending: false,
-            }
-        );
-
-    if (error) {
-        throw error;
-    }
-
-    return data ?? [];
 }
