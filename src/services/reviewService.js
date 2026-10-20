@@ -3,6 +3,19 @@ import {
 } from '../lib/supabaseClient.js';
 
 
+const reviewSelect = `
+    id,
+    place_id,
+    user_id,
+    rating,
+    comment,
+    created_at,
+    profiles (
+        username
+    )
+`;
+
+
 export async function getReviewsByPlace(
     placeId
 ) {
@@ -11,17 +24,7 @@ export async function getReviewsByPlace(
         error,
     } = await supabase
         .from('reviews')
-        .select(`
-            id,
-            place_id,
-            user_id,
-            rating,
-            comment,
-            created_at,
-            profiles (
-                username
-            )
-        `)
+        .select(reviewSelect)
         .eq(
             'place_id',
             placeId
@@ -50,17 +53,7 @@ export async function createReview(
     } = await supabase
         .from('reviews')
         .insert(reviewData)
-        .select(`
-            id,
-            place_id,
-            user_id,
-            rating,
-            comment,
-            created_at,
-            profiles (
-                username
-            )
-        `)
+        .select(reviewSelect)
         .single();
 
     if (error) {
@@ -69,4 +62,49 @@ export async function createReview(
 
     return data;
 }
+
+
+export async function updateReview(
+    reviewId,
+    reviewData
+) {
+    const {
+        data,
+        error,
+    } = await supabase
+        .from('reviews')
+        .update(reviewData)
+        .eq(
+            'id',
+            reviewId
+        )
+        .select(reviewSelect)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+
+export async function deleteReview(
+    reviewId
+) {
+    const {
+        error,
+    } = await supabase
+        .from('reviews')
+        .delete()
+        .eq(
+            'id',
+            reviewId
+        );
+
+    if (error) {
+        throw error;
+    }
+}
+
 

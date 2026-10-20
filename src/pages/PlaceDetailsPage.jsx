@@ -141,6 +141,36 @@ export default function PlaceDetailsPage() {
     }
 
 
+    function handleReviewUpdated(
+        updatedReview
+    ) {
+        setReviews(
+            currentReviews =>
+                currentReviews.map(
+                    review =>
+                        review.id
+                        === updatedReview.id
+                            ? updatedReview
+                            : review
+                )
+        );
+    }
+
+
+    function handleReviewDeleted(
+        deletedReviewId
+    ) {
+        setReviews(
+            currentReviews =>
+                currentReviews.filter(
+                    review =>
+                        review.id
+                        !== deletedReviewId
+                )
+        );
+    }
+
+
     function calculateAverageRating() {
         if (reviews.length === 0) {
             return 0;
@@ -174,8 +204,10 @@ export default function PlaceDetailsPage() {
             return;
         }
 
+
         setError('');
         setIsDeleting(true);
+
 
         try {
             await deletePlace(
@@ -250,7 +282,8 @@ export default function PlaceDetailsPage() {
 
 
     const isOwner =
-        user?.id === place.owner_id;
+        user?.id
+        === place.owner_id;
 
     const averageRating =
         calculateAverageRating();
@@ -310,13 +343,16 @@ export default function PlaceDetailsPage() {
                                 />
 
                                 <strong>
-                                    {averageRating
-                                        .toFixed(1)}
+                                    {
+                                        averageRating
+                                            .toFixed(1)
+                                    }
                                 </strong>
 
                                 <span>
                                     {reviews.length}
                                     {' '}
+
                                     {reviews.length === 1
                                         ? 'review'
                                         : 'reviews'}
@@ -439,8 +475,18 @@ export default function PlaceDetailsPage() {
                     reviews={
                         reviews
                     }
+                    currentUserId={
+                        user?.id
+                    }
+                    onReviewUpdated={
+                        handleReviewUpdated
+                    }
+                    onReviewDeleted={
+                        handleReviewDeleted
+                    }
                 />
             </section>
         </div>
     );
 }
+
