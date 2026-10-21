@@ -3,6 +3,10 @@ import {
     useState,
 } from 'react';
 
+import {
+    useSearchParams,
+} from 'react-router-dom';
+
 import PageHeading
     from '../components/PageHeading.jsx';
 
@@ -25,6 +29,24 @@ const categories = [
 
 export default function CatalogPage() {
     const [
+        searchParams,
+        setSearchParams,
+    ] = useSearchParams();
+
+    const categoryFromUrl =
+        searchParams.get(
+            'category'
+        );
+
+    const initialCategory =
+        categories.includes(
+            categoryFromUrl
+        )
+            ? categoryFromUrl
+            : 'All';
+
+
+    const [
         places,
         setPlaces,
     ] = useState([]);
@@ -37,7 +59,14 @@ export default function CatalogPage() {
     const [
         selectedCategory,
         setSelectedCategory,
-    ] = useState('All');
+    ] = useState(
+        initialCategory
+    );
+
+    const [
+        sortOption,
+        setSortOption,
+    ] = useState('newest');
 
     const [
         isLoading,
@@ -91,7 +120,56 @@ export default function CatalogPage() {
     }, []);
 
 
-    function matchesSearch(place) {
+    useEffect(() => {
+        const category =
+            searchParams.get(
+                'category'
+            );
+
+        if (
+            categories.includes(
+                category
+            )
+        ) {
+            setSelectedCategory(
+                category
+            );
+
+            return;
+        }
+
+        setSelectedCategory(
+            'All'
+        );
+    }, [
+        searchParams,
+    ]);
+
+
+    function handleCategoryChange(
+        category
+    ) {
+        setSelectedCategory(
+            category
+        );
+
+
+        if (category === 'All') {
+            setSearchParams({});
+
+            return;
+        }
+
+
+        setSearchParams({
+            category,
+        });
+    }
+
+
+    function matchesSearch(
+        place
+    ) {
         const normalizedSearch =
             searchTerm
                 .trim()
@@ -120,7 +198,9 @@ export default function CatalogPage() {
     }
 
 
-    function matchesCategory(place) {
+    function matchesCategory(
+        place
+    ) {
         if (
             selectedCategory === 'All'
         ) {
@@ -134,12 +214,48 @@ export default function CatalogPage() {
     }
 
 
+    function comparePlaces(
+        firstPlace,
+        secondPlace
+    ) {
+        if (
+            sortOption === 'rating'
+        ) {
+            return (
+                getAverageRating(
+                    secondPlace
+                )
+                - getAverageRating(
+                    firstPlace
+                )
+            );
+        }
+
+
+        return (
+            new Date(
+                secondPlace.created_at
+            )
+            - new Date(
+                firstPlace.created_at
+            )
+        );
+    }
+
+
     const filteredPlaces =
         places.filter(
             place =>
                 matchesSearch(place)
                 && matchesCategory(place)
         );
+
+
+    const sortedPlaces = [
+        ...filteredPlaces,
+    ].sort(
+        comparePlaces
+    );
 
 
     if (isLoading) {
@@ -218,7 +334,7 @@ export default function CatalogPage() {
                                 }
                                 onClick={
                                     () =>
-                                        setSelectedCategory(
+                                        handleCategoryChange(
                                             category
                                         )
                                 }
@@ -232,11 +348,37 @@ export default function CatalogPage() {
                 </div>
 
 
+                <div className="sort-control">
+                    <label htmlFor="sort">
+                        Sort by
+                    </label>
+
+                    <select
+                        id="sort"
+                        value={sortOption}
+                        onChange={
+                            event =>
+                                setSortOption(
+                                    event.target.value
+                                )
+                        }
+                    >
+                        <option value="newest">
+                            Newest
+                        </option>
+
+                        <option value="rating">
+                            Top rated
+                        </option>
+                    </select>
+                </div>
+
+
                 <p className="results-count">
-                    {filteredPlaces.length}
+                    {sortedPlaces.length}
                     {' '}
 
-                    {filteredPlaces.length === 1
+                    {sortedPlaces.length === 1
                         ? 'place found'
                         : 'places found'}
                 </p>
@@ -268,7 +410,7 @@ export default function CatalogPage() {
 
             {!error
                 && places.length > 0
-                && filteredPlaces.length === 0
+                && sortedPlaces.length === 0
                 && (
                     <div className="empty-state">
                         <h2>
@@ -284,7 +426,7 @@ export default function CatalogPage() {
 
 
             <div className="places-grid">
-                {filteredPlaces.map(
+                {sortedPlaces.map(
                     place => (
                         <PlaceCard
                             key={place.id}
@@ -298,7 +440,39 @@ export default function CatalogPage() {
 }
 
 
-function getCategoryLabel(category) {
+function getAverageRating(
+    place
+) {
+    const reviews =
+        place.reviews ?? [];
+
+    if (reviews.length === 0) {
+        return 0;
+    }
+
+
+    const totalRating =
+        reviews.reduce(
+            (
+                total,
+                review
+            ) =>
+                total
+                + review.rating,
+            0
+        );
+
+
+    return (
+        totalRating
+        / reviews.length
+    );
+}
+
+
+function getCategoryLabel(
+    category
+) {
     if (category === 'Restaurant') {
         return 'Restaurants';
     }

@@ -2152,4 +2152,22 @@ p {
     background: #d8d8cd;
 }
 
+.featured-section {
+    padding:
+        85px
+        0;
+}
+
+
+.featured-message {
+    padding:
+        35px
+        0;
+
+    font-size: 14px;
+
+    color: #718073;
+}
+
+
 
