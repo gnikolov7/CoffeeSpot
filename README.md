@@ -302,7 +302,7 @@ npm run build
 
 ## Deployment
 
-Live URL will be added after deployment.
+Live URL: https://coffee-spot-three.vercel.app/
 
 ## Author
 
