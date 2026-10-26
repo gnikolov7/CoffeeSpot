@@ -2,9 +2,13 @@
 
 CoffeeSpot is a React application for discovering restaurants, cafes, bakeries and bars.
 
-Users can browse places, search and filter them, see ratings and reviews, and open a details page for every place.
+Users can browse places, search and filter them, view ratings and reviews, and open a details page for each place.
 
-Registered users can also add their own places and write reviews.
+Registered users can also add places and leave reviews.
+
+## Live Application
+
+https://coffee-spot-three.vercel.app/
 
 ## Technologies
 
@@ -14,91 +18,106 @@ Registered users can also add their own places and write reviews.
 - Vite
 - Supabase
 - CSS
-- Git / GitHub
+- Git
+- GitHub
+- Vercel
 
-## Main Features
+---
 
-### Guests
+# Functional Guide
 
-Guests can:
+## 1. Project Overview
 
-- View all places
-- Search places
-- Filter by category
-- Sort by newest or top rated
-- View place details
-- Read reviews
-- Register
+**Application Name:** CoffeeSpot
+
+**Application Category / Topic:** Place discovery and review platform
+
+**Main Purpose:**
+
+CoffeeSpot helps users discover restaurants, cafes, bakeries and bars.
+
+Visitors can browse places and read reviews, while registered users can add new places and share their own ratings and opinions.
+
+---
+
+## 2. User Access & Permissions
+
+### Guest (Not Authenticated)
+
+Guests can access:
+
+- Home page
+- Places catalog
+- Place details
 - Login
+- Register
 
-### Logged-in Users
+Guests can see public information about places, ratings and reviews.
 
-Logged-in users can also:
+Guests cannot:
+
+- Add places
+- Edit places
+- Delete places
+- Add reviews
+- Edit reviews
+- Delete reviews
+- Open My Places
+
+### Authenticated User
+
+Logged-in users can access the public pages and also:
 
 - Add a new place
-- View their own places
-- Edit their own places
-- Delete their own places
-- Add a review
-- Edit their own review
-- Delete their own review
+- Open My Places
+- Write reviews
+- Edit their own reviews
+- Delete their own reviews
+- Edit places they created
+- Delete places they created
 - Logout
 
-## Authentication
+Only the author of a place can edit or delete it.
 
-Authentication is handled with Supabase.
+Only the author of a review can edit or delete it.
 
-The application supports:
+---
 
-- Register
-- Login
-- Logout
-- Persistent user session
+## 3. Authentication & Session Handling
 
-The current user is stored and shared through React Context.
+### Authentication Flow
 
-## Database
+Authentication is handled with Supabase Authentication.
 
-The project uses Supabase as a backend service.
+When the application loads, `AuthContext` checks if a Supabase session already exists.
 
-The main tables are:
+If a user is logged in, the user information is stored in the authentication context and becomes available to the rest of the application.
 
-### places
+During login, the email and password are sent to Supabase.
 
-Stores information about every place.
+During registration, a new Supabase user is created with an email, password and username.
 
-Some of the fields are:
+When the user logs out, the Supabase session is cleared and the application returns to guest mode.
 
-- name
-- description
-- category
-- city
-- address
-- image
-- owner
-- created date
+### Session Persistence
 
-### reviews
+The application uses the Supabase authentication session together with React Context.
 
-Stores:
+`AuthContext` loads the current session when the application starts and listens for authentication changes.
 
-- place
-- user
-- rating
-- comment
-- created date
+Because of this, a logged-in user stays recognized after refreshing the page.
 
-Each user can leave one review for a place.
+---
 
-### profiles
+## 4. Routing Structure
 
-Stores the username connected to every registered user.
+The application uses React Router for client-side routing.
 
-## Routes
+### Main Routes
 
 ```text
-/                         Home page
-/places                   Catalog
+/                         Home
+/places                   Places catalog
 /places/:placeId          Place details
 /places/new               Add place
 /places/:placeId/edit     Edit place
@@ -107,30 +126,34 @@ Stores the username connected to every registered user.
 /register                 Register
 ```
 
-Private pages are protected with route guards.
+There is also a Not Found page for invalid routes.
 
-Guests cannot open private pages.
+### Route Guards Logic
 
-Logged-in users cannot open the Login and Register pages.
+`ProtectedRoute` is used for pages that require authentication.
+
+Guests trying to access a protected page are redirected to Login.
+
+`GuestRoute` is used for Login and Register.
+
+If an authenticated user tries to open Login or Register, the user is redirected back to the application.
+
+### Parameterized Routes
+
+The application uses URL parameters in:
+
+```text
+/places/:placeId
+/places/:placeId/edit
+```
+
+The `placeId` parameter is used to load the correct place from Supabase.
 
 ---
 
-# Functional Guide
+## 5. List → Details Flow
 
-## Home Page
-
-The home page contains the main categories and featured places.
-
-The user can open the full catalog or choose a category such as:
-
-- Restaurants
-- Cafes
-- Bakeries
-- Bars
-
-Choosing a category opens the catalog with the selected filter.
-
-## Catalog
+### Catalog / List Page
 
 The catalog is available at:
 
@@ -138,130 +161,360 @@ The catalog is available at:
 /places
 ```
 
+It loads places from Supabase.
+
+Each place is shown as a card with information such as:
+
+- Name
+- Category
+- City
+- Image
+- Rating
+- Number of reviews
+
 The user can:
 
 - Search places
 - Filter by category
 - Sort by newest
 - Sort by rating
-- Open the details page of a place
 
-## Place Details
+The available categories are:
 
-The details page is available at:
+- Restaurants
+- Cafes
+- Bakeries
+- Bars
+
+A category selected from the Home page can also be stored in the URL.
+
+Example:
+
+```text
+/places?category=Cafe
+```
+
+### Details Page
+
+Clicking a place card opens:
 
 ```text
 /places/:placeId
 ```
 
-It shows information about the place and its reviews.
+The place ID is received from the route parameter.
 
-Guests can read reviews.
+The details page loads the selected place and its reviews from Supabase.
 
-Logged-in users can also write a review.
+It displays:
 
-## Register
+- Place name
+- Category
+- City
+- Address
+- Description
+- Image
+- Average rating
+- Review count
+- Reviews
 
-A new user can register from:
+React Router `Link` components are used for navigation, while `useNavigate` is used when navigation is needed after actions such as creating, editing or deleting data.
 
-```text
-/register
-```
+---
 
-The registration form contains:
+## 6. Data Source & Backend
 
-- Username
-- Email
-- Password
+CoffeeSpot uses Supabase as a Backend-as-a-Service.
 
-## Login
+Supabase provides:
 
-Existing users can login from:
+- PostgreSQL database
+- Authentication
+- Persistent remote data
+- Row Level Security
 
-```text
-/login
-```
+The main tables used by the application are:
 
-After successful login, private functionality becomes available.
+### places
 
-## Add Place
+Stores place information.
 
-Logged-in users can add a place from:
+Important fields include:
+
+- id
+- owner_id
+- name
+- description
+- category
+- city
+- address
+- image_url
+- created_at
+
+### reviews
+
+Stores user reviews.
+
+Important fields include:
+
+- id
+- place_id
+- user_id
+- rating
+- comment
+- created_at
+
+### profiles
+
+Stores public user information such as username.
+
+The application communicates with Supabase through the Supabase JavaScript client.
+
+---
+
+## 7. Data Operations (CRUD)
+
+The main CRUD collection is `places`.
+
+### Create
+
+A logged-in user can open:
 
 ```text
 /places/new
 ```
 
-The form contains information such as:
+The user fills in the place form and submits it.
 
-- Name
-- Description
-- Category
-- City
-- Address
-- Image URL
+The application sends the data to Supabase and creates a new record in the `places` table.
 
-## My Places
+The current user becomes the owner of the new place.
 
-Logged-in users can open:
+### Read
+
+Places are loaded from Supabase and displayed in:
 
 ```text
-/my-places
+/places
 ```
 
-This page shows the places created by the current user.
+A single place is loaded by ID on:
 
-## Edit Place
+```text
+/places/:placeId
+```
 
-Only the owner of a place can edit it.
+My Places loads only the places owned by the current authenticated user.
 
-The edit route is:
+### Update
+
+The owner of a place can open:
 
 ```text
 /places/:placeId/edit
 ```
 
-## Delete Place
+The form loads the existing data.
 
-Only the owner can delete a place.
+After submitting the edited form, the record is updated in Supabase.
+
+The user is then returned to the details page.
+
+### Delete
+
+The owner can delete a place from the details page.
 
 The application asks for confirmation before deletion.
 
-## Reviews
+After successful deletion, the user is redirected to the places catalog.
 
-Logged-in users can leave a rating and comment.
+Supabase Row Level Security is also used to make sure users cannot edit or delete records owned by another user.
 
-Users can also edit or delete their own reviews.
+### Reviews
 
-The average rating of a place is calculated from its reviews.
+Reviews also use remote data operations.
+
+Logged-in users can:
+
+- Create a review
+- Read existing reviews
+- Edit their own review
+- Delete their own review
+
+A user can leave only one review for the same place.
 
 ---
 
-## Project Structure
+## 8. Forms & Validation
 
-The project is separated into:
+### Forms Used
+
+The application contains forms for:
+
+- Register
+- Login
+- Add Place
+- Edit Place
+- Add Review
+- Edit Review
+
+The forms use controlled React inputs.
+
+### Validation Rules
+
+Examples of validation include:
+
+**Username**
+
+The username must contain at least 2 characters.
+
+**Password**
+
+The password is required and must meet the minimum length used by the application.
+
+**Place name**
+
+A place must have a name.
+
+**Place description**
+
+The description is required and must contain enough information before the form can be submitted.
+
+**City**
+
+The city is required.
+
+**Review**
+
+A review comment must contain at least 5 characters.
+
+**Rating**
+
+A rating must be between 1 and 5.
+
+Validation errors are displayed in the interface instead of allowing invalid data to crash the application.
+
+---
+
+## 9. React-Specific Techniques
+
+### Hooks & Component Lifecycle
+
+The application uses React hooks including:
+
+- `useState`
+- `useEffect`
+- `useContext`
+- `useParams`
+- `useNavigate`
+- `useSearchParams`
+
+A custom `useAuth` hook is also used to access authentication data.
+
+`useEffect` is used to load remote data when pages mount.
+
+For example, the Catalog page loads places when the component is opened.
+
+Some effects use an `isActive` variable and a cleanup function.
+
+When the component unmounts, `isActive` becomes false so the component does not try to update state after it is no longer active.
+
+This demonstrates mount and unmount behavior.
+
+Effects also react to changing values such as route parameters and search parameters.
+
+### Context API
+
+`AuthContext` shares authentication information across the application.
+
+It contains information such as:
+
+- Current user
+- Current session
+- Authentication loading state
+- Login function
+- Register function
+- Logout function
+
+Components access the context through the `useAuth` custom hook.
+
+### Component Styling
+
+The application uses an external CSS file:
 
 ```text
-components/
-pages/
-services/
-contexts/
-hooks/
-lib/
-styles/
+src/styles/global.css
 ```
 
-Reusable UI elements are kept inside `components`.
-
-Pages are kept inside `pages`.
-
-Supabase requests are separated inside `services`.
-
-Authentication state is handled with `AuthContext`.
+The same visual style is reused across pages and components.
 
 ---
 
-## Installation
+## 10. Typical User Flow
+
+A typical user journey can be:
+
+1. The user opens CoffeeSpot and browses featured places.
+2. The user opens Explore and searches or filters the catalog.
+3. The user opens the details page of a place and reads its reviews.
+4. The user registers or logs in.
+5. The logged-in user adds a new place or leaves a review.
+6. The user can later edit or delete their own content.
+7. The user logs out.
+
+---
+
+## 11. Error & Edge Case Handling
+
+### Authentication Errors
+
+Errors returned during Login or Register are caught and shown to the user.
+
+Private pages are protected by route guards.
+
+### Network or Data Errors
+
+Supabase requests are wrapped in error handling.
+
+Pages use loading and error states while remote data is being requested.
+
+If a request fails, an error message is displayed instead of crashing the application.
+
+### Empty or Missing Data
+
+The application includes empty states for situations such as:
+
+- No places available
+- No search results
+- No reviews
+- No user-owned places
+
+If a place cannot be loaded, the application displays an error state.
+
+Unknown routes display the Not Found page.
+
+---
+
+# Project Structure
+
+```text
+src/
+├── components/
+├── contexts/
+├── hooks/
+├── lib/
+├── pages/
+├── services/
+├── styles/
+├── App.jsx
+└── main.jsx
+```
+
+The project separates reusable UI components, pages, authentication logic and Supabase service functions.
+
+---
+
+# Installation
 
 Clone the repository:
 
@@ -275,37 +528,68 @@ Open the project:
 cd CoffeeSpot
 ```
 
-Install dependencies:
+Install the dependencies:
 
 ```bash
 npm install
 ```
 
-Create a `.env` file and add:
+Create a `.env` file in the project root.
+
+Add:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
-Start the application:
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-## Production Build
+The application will normally run at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# Production Build
+
+Run:
 
 ```bash
 npm run build
 ```
 
-## Deployment
+The production files are generated inside the `dist` folder.
 
-Live URL: https://coffee-spot-three.vercel.app/
+---
 
-## Author
+# Deployment
+
+The frontend is deployed with Vercel.
+
+Live application:
+
+https://coffee-spot-three.vercel.app/
+
+Supabase is used as the hosted backend and database service.
+
+---
+
+# Repository
+
+https://github.com/gnikolov7/CoffeeSpot
+
+---
+
+# Author
 
 Georgi Nikolov
 
 SoftUni React Project - 2026
+
